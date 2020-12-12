@@ -405,7 +405,7 @@ class Message(Object, Update):
 
     @property
     async def reply_to_message(self):
-        if self._have_reply and not self._reply_to_message:
+        if not self._reply_to_message:
             try:
                 self._reply_to_message = await self._client.get_messages(
                     self.chat.id,
