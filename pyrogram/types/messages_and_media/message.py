@@ -355,7 +355,7 @@ class Message(Object, Update):
         self.forward_from_message_id = forward_from_message_id
         self.forward_signature = forward_signature
         self.forward_date = forward_date
-        self.reply_to_message = reply_to_message
+        self._reply_to_message = reply_to_message
         self.mentioned = mentioned
         self.empty = empty
         self.service = service
@@ -402,6 +402,24 @@ class Message(Object, Update):
         self.matches = matches
         self.command = command
         self.reply_markup = reply_markup
+
+    @property
+    async def reply_to_message(self):
+        print('reply_to_message caled')
+        if self._have_reply and not self._reply_to_message:
+            try:
+                self._reply_to_message = await self._client.get_messages(
+                    self.chat.id,
+                    reply_to_message_ids=self.message_id,
+                    replies=0
+                )
+            except MessageIdsEmpty:
+                pass
+        return self._reply_to_message
+    
+    @reply_to_message.setter
+    def reply_to_message_setter(self, reply_message):
+        self._reply_to_message = reply_message
 
     @staticmethod
     async def _parse(
@@ -486,15 +504,17 @@ class Message(Object, Update):
             if isinstance(action, raw.types.MessageActionGameScore):
                 parsed_message.game_high_score = types.GameHighScore._parse_action(client, message, users)
 
-                if message.reply_to and replies:
-                    try:
-                        parsed_message.reply_to_message = await client.get_messages(
-                            parsed_message.chat.id,
-                            reply_to_message_ids=message.id,
-                            replies=0
-                        )
-                    except MessageIdsEmpty:
-                        pass
+                parsed_message._have_reply = message.reply_to
+
+                # if message.reply_to and replies:
+                #     try:
+                #         parsed_message.reply_to_message = await client.get_messages(
+                #             parsed_message.chat.id,
+                #             reply_to_message_ids=message.id,
+                #             replies=0
+                #         )
+                #     except MessageIdsEmpty:
+                #         pass
 
             return parsed_message
 
@@ -687,15 +707,17 @@ class Message(Object, Update):
                 client=client
             )
 
-            if message.reply_to and replies:
-                try:
-                    parsed_message.reply_to_message = await client.get_messages(
-                        parsed_message.chat.id,
-                        reply_to_message_ids=message.id,
-                        replies=replies - 1
-                    )
-                except MessageIdsEmpty:
-                    pass
+            parsed_message._have_reply = message.reply_to
+
+            # if message.reply_to and replies:
+            #     try:
+            #         parsed_message.reply_to_message = await client.get_messages(
+            #             parsed_message.chat.id,
+            #             reply_to_message_ids=message.id,
+            #             replies=0
+            #         )
+            #     except MessageIdsEmpty:
+            #         pass
 
             return parsed_message
 
