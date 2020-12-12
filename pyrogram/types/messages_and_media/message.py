@@ -405,7 +405,6 @@ class Message(Object, Update):
 
     @property
     async def reply_to_message(self):
-        print('reply_to_message caled')
         if self._have_reply and not self._reply_to_message:
             try:
                 self._reply_to_message = await self._client.get_messages(
