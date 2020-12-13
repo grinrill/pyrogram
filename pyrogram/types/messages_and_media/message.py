@@ -412,7 +412,7 @@ class Message(Object, Update):
                     reply_to_message_ids=self.message_id,
                     replies=0
                 )
-            except MessageIdsEmpty:
+            except (MessageIdsEmpty, IndexError):
                 pass
         return self._reply_to_message
     
